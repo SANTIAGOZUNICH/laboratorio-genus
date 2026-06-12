@@ -22,136 +22,45 @@ const FILL_COLORS = {
    Inspirado en el estilo de la imagen de referencia:
    frasco corto, ancho, hombros curvos, tapa plateada + bulbo grande
    ============================================================ */
-function svgSerum(color, size) {
-  const c = FILL_COLORS[color] || FILL_COLORS['Incoloro'];
-  const w = size, h = Math.round(size * 1.62);
+<!-- SERUM MOCKUP -->
+<div class="product-mockup serum-mockup" style="--fill-color: #d8f4ff;">
+  <svg viewBox="0 0 260 420" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="130" cy="390" rx="70" ry="12" fill="rgba(0,0,0,.12)"/>
 
-  return `<svg width="${w}" height="${h}" viewBox="0 0 180 292" xmlns="http://www.w3.org/2000/svg">
-<defs>
-  <!-- clip para el interior del frasco (fill-layer solo vive aquí) -->
-  <clipPath id="sr-fill-clip-${size}">
-    <path d="M38,148 L38,252 Q38,264 50,264 L130,264 Q142,264 142,252 L142,148 Q142,136 130,136 L50,136 Q38,136 38,148 Z"/>
-  </clipPath>
-  <!-- clip para el cuello -->
-  <clipPath id="sr-neck-clip-${size}">
-    <rect x="72" y="102" width="36" height="36"/>
-  </clipPath>
-  <!-- gradiente del vidrio: bordes con tinte, centro claro -->
-  <linearGradient id="sr-glass-grad-${size}" x1="0%" y1="0%" x2="100%" y2="0%">
-    <stop offset="0%"   stop-color="#1a2a35" stop-opacity=".18"/>
-    <stop offset="8%"   stop-color="#2a4050" stop-opacity=".08"/>
-    <stop offset="35%"  stop-color="#e8f4f8" stop-opacity=".04"/>
-    <stop offset="65%"  stop-color="#ddeef5" stop-opacity=".06"/>
-    <stop offset="92%"  stop-color="#1e3040" stop-opacity=".10"/>
-    <stop offset="100%" stop-color="#152030" stop-opacity=".20"/>
-  </linearGradient>
-  <!-- fondo de la sombra base -->
-  <radialGradient id="sr-shadow-${size}" cx="50%" cy="50%" r="50%">
-    <stop offset="0%"  stop-color="rgba(7,23,47,.28)"/>
-    <stop offset="100%" stop-color="transparent"/>
-  </radialGradient>
-  <!-- gradiente tapa gotero (platino) -->
-  <linearGradient id="sr-cap-${size}" x1="0%" y1="0%" x2="100%" y2="0%">
-    <stop offset="0%"   stop-color="#6a7880"/>
-    <stop offset="15%"  stop-color="#b8c8d0"/>
-    <stop offset="38%"  stop-color="#e8f0f4"/>
-    <stop offset="60%"  stop-color="#c0ced6"/>
-    <stop offset="100%" stop-color="#5e6e78"/>
-  </linearGradient>
-  <!-- bulbo gotero -->
-  <radialGradient id="sr-bulb-${size}" cx="35%" cy="28%" r="65%">
-    <stop offset="0%"   stop-color="#f8fafc"/>
-    <stop offset="45%"  stop-color="#dde8ee"/>
-    <stop offset="100%" stop-color="#b0c4ce"/>
-  </radialGradient>
-</defs>
+    <!-- Gotero -->
+    <rect x="111" y="35" width="38" height="88" rx="20" fill="#fff"/>
+    <rect x="100" y="115" width="60" height="52" rx="9" fill="#f7f9fb" stroke="#24465d" stroke-width="5"/>
+    <rect x="116" y="165" width="28" height="132" rx="12" fill="rgba(255,255,255,.35)" stroke="#24465d" stroke-width="3"/>
 
-<!-- sombra base -->
-<ellipse cx="90" cy="276" rx="62" ry="10" fill="url(#sr-shadow-${size})"/>
+    <!-- Envase vidrio -->
+    <rect x="70" y="155" width="120" height="215" rx="35" fill="rgba(255,255,255,.22)" stroke="#24465d" stroke-width="6"/>
 
-<!-- ══ GLASS LAYER — parte trasera (se dibuja primero) ══ -->
-<!-- base / anillo inferior del frasco -->
-<rect x="36" y="256" width="108" height="10" rx="5" fill="#b8cdd8" opacity=".35"/>
-<!-- cuerpo vidrio — contorno exterior negro suave (como en la referencia) -->
-<path d="M38,148 L38,252 Q38,264 50,264 L130,264 Q142,264 142,252 L142,148 Q142,136 130,136 L50,136 Q38,136 38,148 Z"
-      fill="rgba(240,250,255,0.06)" stroke="#1e2e3a" stroke-width="2.2" stroke-linejoin="round"/>
+    <!-- Líquido editable -->
+    <path class="product-fill" d="M75 235 Q130 222 185 235 L185 335 Q185 365 155 365 L105 365 Q75 365 75 335 Z" fill="var(--fill-color)" opacity=".75"/>
 
-<!-- ══ FILL LAYER — único que cambia de color ══ -->
-<g clip-path="url(#sr-fill-clip-${size})">
-  <!-- fondo base del líquido -->
-  <rect x="38" y="136" width="104" height="128" fill="${c.base}"/>
-  <!-- gradiente de profundidad: lado izquierdo más oscuro -->
-  <rect x="38" y="136" width="22" height="128" fill="${c.edge}" opacity=".55"/>
-  <!-- gradiente derecho -->
-  <rect x="120" y="136" width="22" height="128" fill="${c.edge}" opacity=".35"/>
-  <!-- superficie del líquido (menisco) -->
-  <path d="M38,155 Q50,148 90,150 Q130,148 142,155" fill="${c.surface}" opacity=".80"/>
-  <!-- brillo interno del líquido (no es el reflejo del vidrio) -->
-  <ellipse cx="72" cy="160" rx="18" ry="4" fill="${c.surface}" opacity=".55" transform="rotate(-6,72,160)"/>
-  <!-- tubo del gotero sumergido en el líquido -->
-  <rect x="88" y="150" width="4" height="100" rx="2" fill="rgba(200,225,240,.22)"/>
-  <!-- gota cayendo del tubo -->
-  <path d="M90,230 Q90,242 87,248 Q84,252 90,255 Q96,252 93,248 Q90,242 90,230 Z" fill="${c.drop}" opacity=".88"/>
-  <circle cx="90" cy="255" r="3.5" fill="${c.drop}" opacity=".80"/>
-</g>
+    <!-- Línea de líquido -->
+    <path d="M75 235 Q130 222 185 235" fill="none" stroke="#24465d" stroke-width="3" opacity=".75"/>
 
-<!-- ══ GLASS LAYER — paredes encima del fill ══ -->
-<!-- vidrio frontal (encima del fill, transparente con tinte mínimo) -->
-<path d="M38,148 L38,252 Q38,264 50,264 L130,264 Q142,264 142,252 L142,148 Q142,136 130,136 L50,136 Q38,136 38,148 Z"
-      fill="url(#sr-glass-grad-${size})"/>
-<!-- bordes laterales gruesos vidrio (línea interior izq y der) -->
-<line x1="52" y1="138" x2="52" y2="262" stroke="rgba(255,255,255,.12)" stroke-width="2"/>
-<line x1="128" y1="138" x2="128" y2="262" stroke="rgba(0,20,40,.06)" stroke-width="2"/>
+    <!-- Reflejos -->
+    <path d="M92 175 C82 215 82 300 92 350" stroke="white" stroke-width="8" opacity=".55" fill="none"/>
+    <path d="M170 175 C180 220 180 300 170 350" stroke="white" stroke-width="5" opacity=".35" fill="none"/>
 
-<!-- cuello frasco — vidrio -->
-<g clip-path="url(#sr-neck-clip-${size})">
-  <rect x="72" y="102" width="36" height="36" fill="${c.base}" opacity=".30"/>
-  <rect x="72" y="102" width="36" height="36" fill="url(#sr-glass-grad-${size})"/>
-</g>
-<rect x="72" y="102" width="36" height="36" rx="3" fill="none" stroke="#1e2e3a" stroke-width="1.8"/>
+    <!-- Burbujas -->
+    <circle cx="105" cy="270" r="4" fill="white" opacity=".75"/>
+    <circle cx="150" cy="285" r="3" fill="white" opacity=".7"/>
+    <circle cx="120" cy="320" r="3" fill="white" opacity=".65"/>
+    <circle cx="162" cy="330" r="4" fill="white" opacity=".55"/>
 
-<!-- hombros del frasco -->
-<path d="M50,136 Q44,136 38,148 L38,148 Q44,138 50,138 Z" fill="rgba(30,48,60,.12)"/>
-<path d="M130,136 Q136,136 142,148 L142,148 Q136,138 130,138 Z" fill="rgba(30,48,60,.08)"/>
+    <!-- Etiqueta -->
+    <rect x="83" y="255" width="94" height="66" rx="3" fill="rgba(255,255,255,.9)" stroke="#24465d" stroke-width="2"/>
+    <text x="130" y="285" text-anchor="middle" font-size="24" font-weight="700" fill="#0c2338">SERUM</text>
+    <line x1="105" y1="297" x2="155" y2="297" stroke="#24465d" stroke-width="1"/>
+    <text x="130" y="315" text-anchor="middle" font-size="13" fill="#0c2338">laboratorio Genus</text>
 
-<!-- ══ REFLECTION LAYER — fijo, nunca cambia ══ -->
-<!-- reflejo frontal izquierdo (largo, cálido) -->
-<rect x="44" y="142" width="8" height="114" rx="4" fill="white" opacity=".48"/>
-<!-- reflejo secundario izquierdo -->
-<rect x="55" y="148" width="3" height="88" rx="1.5" fill="white" opacity=".22"/>
-<!-- brillo superior derecho -->
-<ellipse cx="118" cy="148" rx="10" ry="3.5" fill="white" opacity=".30" transform="rotate(10,118,148)"/>
-<!-- destello esquina superior izq -->
-<ellipse cx="50" cy="140" rx="7" ry="4" fill="white" opacity=".55" transform="rotate(-15,50,140)"/>
-
-<!-- ══ LABEL LAYER — fijo ══ -->
-<rect x="46" y="180" width="88" height="58" rx="3" fill="white" opacity=".90"/>
-<rect x="48" y="182" width="84" height="54" rx="2" fill="none" stroke="#ccc" stroke-width=".75"/>
-<text x="90" y="203" text-anchor="middle" font-family="'Helvetica Neue',Arial,sans-serif" font-size="12" font-weight="300" letter-spacing="3.5" fill="#1a1a2e">SERUM</text>
-<line x1="56" y1="210" x2="124" y2="210" stroke="#aaa" stroke-width=".75"/>
-<text x="90" y="221" text-anchor="middle" font-family="'Helvetica Neue',Arial,sans-serif" font-size="6" letter-spacing="2.5" fill="#666">LABORATORIO</text>
-<text x="90" y="230" text-anchor="middle" font-family="'Helvetica Neue',Arial,sans-serif" font-size="6" letter-spacing="2.5" fill="#666">GENUS</text>
-
-<!-- ══ CAP LAYER — tapa platino + bulbo gotero, fijo ══ -->
-<!-- anillo de rosca (collar platino) -->
-<rect x="70" y="90" width="40" height="16" rx="5" fill="url(#sr-cap-${size})"/>
-<rect x="72" y="92" width="7"  height="12" rx="3.5" fill="white" opacity=".28"/>
-<rect x="70" y="90" width="40" height="3"  rx="1.5" fill="white" opacity=".22"/>
-<rect x="70" y="103" width="40" height="3" rx="1" fill="rgba(80,100,110,.28)"/>
-<!-- tubo fino del gotero (parte exterior, sobre la tapa) -->
-<rect x="88.5" y="56" width="3" height="36" rx="1.5" fill="rgba(180,200,212,.70)"/>
-<rect x="89.2" y="58" width="1.2" height="32" rx=".6" fill="white" opacity=".30"/>
-<!-- bulbo goma — grande y redondeado como la referencia -->
-<ellipse cx="90" cy="34" rx="18" ry="22" fill="url(#sr-bulb-${size})"/>
-<ellipse cx="90" cy="33" rx="16" ry="20" fill="none" stroke="rgba(150,175,190,.50)" stroke-width="1"/>
-<!-- brillo del bulbo -->
-<ellipse cx="82" cy="24" rx="6"  ry="8" fill="white" opacity=".52" transform="rotate(-12,82,24)"/>
-<ellipse cx="95" cy="20" rx="3"  ry="4" fill="white" opacity=".32" transform="rotate(8,95,20)"/>
-<!-- base bulbo (unión con tubo) -->
-<ellipse cx="90" cy="55" rx="10" ry="4" fill="rgba(160,185,198,.60)"/>
-</svg>`;
-}
-
+    <!-- Contorno inferior -->
+    <path d="M85 350 Q130 370 175 350" fill="none" stroke="#24465d" stroke-width="3" opacity=".55"/>
+  </svg>
+</div>
 /* ============================================================
    CREMA — pote cilíndrico de vidrio con crema visible encima
    ============================================================ */
@@ -268,111 +177,47 @@ function svgCrema(color, size) {
 /* ============================================================
    SHAMPOO — botella redondeada de vidrio con pump plateado
    ============================================================ */
-function svgShampoo(color, size) {
-  const c = FILL_COLORS[color] || FILL_COLORS['Incoloro'];
-  const w = Math.round(size * 0.68), h = Math.round(size * 1.62);
+<!-- SHAMPOO MOCKUP -->
+<div class="product-mockup shampoo-mockup" style="--fill-color: #d8f4ff;">
+  <svg viewBox="0 0 280 440" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="140" cy="405" rx="78" ry="13" fill="rgba(0,0,0,.12)"/>
 
-  return `<svg width="${w}" height="${h}" viewBox="0 0 136 280" xmlns="http://www.w3.org/2000/svg">
-<defs>
-  <clipPath id="sh-fill-clip-${size}">
-    <path d="M18,104 Q12,116 12,132 L12,242 Q12,254 22,254 L114,254 Q124,254 124,242 L124,132 Q124,116 118,104 Z"/>
-  </clipPath>
-  <linearGradient id="sh-glass-${size}" x1="0%" y1="0%" x2="100%" y2="0%">
-    <stop offset="0%"   stop-color="#1a2a35" stop-opacity=".20"/>
-    <stop offset="10%"  stop-color="#28404f" stop-opacity=".08"/>
-    <stop offset="40%"  stop-color="#eaf6fb" stop-opacity=".04"/>
-    <stop offset="70%"  stop-color="#d8eef6" stop-opacity=".06"/>
-    <stop offset="90%"  stop-color="#1c2e3c" stop-opacity=".10"/>
-    <stop offset="100%" stop-color="#142030" stop-opacity=".22"/>
-  </linearGradient>
-  <linearGradient id="sh-pump-${size}" x1="0%" y1="0%" x2="100%" y2="0%">
-    <stop offset="0%"   stop-color="#6a7880"/>
-    <stop offset="18%"  stop-color="#b8c8d2"/>
-    <stop offset="42%"  stop-color="#e8f0f4"/>
-    <stop offset="65%"  stop-color="#b0c0ca"/>
-    <stop offset="100%" stop-color="#5e6e78"/>
-  </linearGradient>
-  <radialGradient id="sh-shadow-${size}" cx="50%" cy="50%" r="50%">
-    <stop offset="0%"  stop-color="rgba(7,23,47,.24)"/>
-    <stop offset="100%" stop-color="transparent"/>
-  </radialGradient>
-</defs>
+    <!-- Pump -->
+    <rect x="122" y="42" width="36" height="55" rx="8" fill="#f7f9fb" stroke="#24465d" stroke-width="4"/>
+    <rect x="95" y="25" width="90" height="28" rx="8" fill="#f7f9fb" stroke="#24465d" stroke-width="4"/>
+    <rect x="106" y="90" width="68" height="48" rx="8" fill="#f7f9fb" stroke="#24465d" stroke-width="5"/>
+    <rect x="126" y="135" width="28" height="190" rx="12" fill="rgba(255,255,255,.35)" stroke="#24465d" stroke-width="3"/>
 
-<!-- sombra base -->
-<ellipse cx="68" cy="268" rx="54" ry="9" fill="url(#sh-shadow-${size})"/>
+    <!-- Botella vidrio -->
+    <rect x="65" y="120" width="150" height="260" rx="34" fill="rgba(255,255,255,.22)" stroke="#24465d" stroke-width="6"/>
 
-<!-- ══ GLASS LAYER — cuerpo trasero ══ -->
-<path d="M18,104 Q12,116 12,132 L12,242 Q12,254 22,254 L114,254 Q124,254 124,242 L124,132 Q124,116 118,104 Z"
-      fill="rgba(228,246,254,0.05)" stroke="#1e2e3a" stroke-width="2.2" stroke-linejoin="round"/>
+    <!-- Líquido editable -->
+    <path class="product-fill" d="M70 205 Q140 192 210 205 L210 345 Q210 375 180 375 L100 375 Q70 375 70 345 Z" fill="var(--fill-color)" opacity=".75"/>
 
-<!-- ══ FILL LAYER — solo el contenido cambia ══ -->
-<g clip-path="url(#sh-fill-clip-${size})">
-  <!-- fondo del líquido -->
-  <path d="M18,104 Q12,116 12,132 L12,242 Q12,254 22,254 L114,254 Q124,254 124,242 L124,132 Q124,116 118,104 Z" fill="${c.base}"/>
-  <!-- sombra lateral izq (volumen) -->
-  <rect x="12" y="100" width="20" height="160" fill="${c.edge}" opacity=".52"/>
-  <!-- sombra lateral der -->
-  <rect x="104" y="100" width="20" height="160" fill="${c.edge}" opacity=".34"/>
-  <!-- tono más oscuro en el fondo -->
-  <rect x="12" y="218" width="112" height="36" fill="${c.edge}" opacity=".22"/>
-  <!-- superficie del líquido -->
-  <path d="M18,122 Q34,115 68,118 Q102,115 118,122" fill="${c.surface}" opacity=".72"/>
-  <!-- tubo interior -->
-  <rect x="66" y="118" width="4" height="118" rx="2" fill="rgba(200,225,240,.22)"/>
-  <!-- burbujas internas -->
-  <circle cx="42"  cy="150" r="3.2" fill="${c.surface}" opacity=".55"/>
-  <circle cx="96"  cy="168" r="2.4" fill="${c.surface}" opacity=".45"/>
-  <circle cx="35"  cy="188" r="2.0" fill="${c.surface}" opacity=".42"/>
-  <circle cx="100" cy="208" r="2.8" fill="${c.surface}" opacity=".50"/>
-  <circle cx="50"  cy="228" r="2.2" fill="${c.surface}" opacity=".40"/>
-</g>
+    <!-- Línea del contenido -->
+    <path d="M70 205 Q140 192 210 205" fill="none" stroke="#24465d" stroke-width="3" opacity=".75"/>
 
-<!-- ══ GLASS LAYER — paredes encima del fill ══ -->
-<path d="M18,104 Q12,116 12,132 L12,242 Q12,254 22,254 L114,254 Q124,254 124,242 L124,132 Q124,116 118,104 Z"
-      fill="url(#sh-glass-${size})"/>
-<!-- línea vidrio izq interior -->
-<path d="M24,108 Q18,120 18,134 L18,242 Q18,252 26,254" fill="none" stroke="rgba(255,255,255,.16)" stroke-width="2" stroke-linecap="round"/>
-<!-- línea vidrio der -->
-<path d="M112,108 Q118,120 118,134 L118,242" fill="none" stroke="rgba(0,20,40,.06)" stroke-width="2" stroke-linecap="round"/>
-<!-- hombros botella -->
-<path d="M28,96 Q18,100 18,104 L118,104 Q118,100 108,96 Z" fill="rgba(30,48,60,.14)"/>
-<!-- cuello -->
-<rect x="50" y="60" width="36" height="38" rx="5"
-      fill="rgba(228,246,254,0.10)" stroke="#1e2e3a" stroke-width="1.8"/>
-<!-- anillo superior del cuello -->
-<rect x="48" y="94" width="40" height="12" rx="4" fill="rgba(30,48,62,.18)"/>
-<!-- base botella -->
-<rect x="14" y="246" width="108" height="8" rx="4" fill="rgba(30,48,62,.25)"/>
+    <!-- Reflejos -->
+    <path d="M88 145 C78 205 78 310 90 360" stroke="white" stroke-width="8" opacity=".55" fill="none"/>
+    <path d="M195 145 C205 210 205 310 192 360" stroke="white" stroke-width="5" opacity=".35" fill="none"/>
 
-<!-- ══ REFLECTION LAYER — fijo ══ -->
-<path d="M16,112 Q13,124 13,136 L13,240 Q13,252 21,254" fill="none" stroke="white" stroke-width="9" stroke-opacity=".38" stroke-linecap="round"/>
-<rect x="54" y="64" width="4" height="30" rx="2" fill="white" opacity=".35"/>
-<ellipse cx="45" cy="100" rx="20" ry="4" fill="white" opacity=".32" transform="rotate(-8,45,100)"/>
+    <!-- Burbujas -->
+    <circle cx="105" cy="245" r="4" fill="white" opacity=".75"/>
+    <circle cx="160" cy="260" r="3" fill="white" opacity=".7"/>
+    <circle cx="125" cy="310" r="3" fill="white" opacity=".65"/>
+    <circle cx="178" cy="335" r="4" fill="white" opacity=".55"/>
+    <circle cx="145" cy="345" r="3" fill="white" opacity=".65"/>
 
-<!-- ══ LABEL LAYER — fijo ══ -->
-<rect x="20" y="142" width="96" height="68" rx="3" fill="white" opacity=".90"/>
-<rect x="22" y="144" width="92" height="64" rx="2" fill="none" stroke="#ccc" stroke-width=".75"/>
-<text x="68" y="166" text-anchor="middle" font-family="'Helvetica Neue',Arial,sans-serif" font-size="11" font-weight="300" letter-spacing="2.5" fill="#1a1a2e">SHAMPOO</text>
-<line x1="30" y1="173" x2="106" y2="173" stroke="#aaa" stroke-width=".75"/>
-<text x="68" y="185" text-anchor="middle" font-family="'Helvetica Neue',Arial,sans-serif" font-size="6" letter-spacing="2.5" fill="#666">LABORATORIO</text>
-<text x="68" y="196" text-anchor="middle" font-family="'Helvetica Neue',Arial,sans-serif" font-size="6" letter-spacing="2.5" fill="#666">GENUS</text>
+    <!-- Etiqueta -->
+    <rect x="83" y="235" width="114" height="75" rx="3" fill="rgba(255,255,255,.9)" stroke="#24465d" stroke-width="2"/>
+    <text x="140" y="267" text-anchor="middle" font-size="24" font-weight="700" fill="#0c2338">SHAMPOO</text>
+    <line x1="105" y1="280" x2="175" y2="280" stroke="#24465d" stroke-width="1"/>
+    <text x="140" y="300" text-anchor="middle" font-size="13" fill="#0c2338">laboratorio Genus</text>
 
-<!-- ══ CAP LAYER — pump platino, fijo ══ -->
-<!-- collar platino -->
-<rect x="46" y="48" width="44" height="16" rx="5" fill="url(#sh-pump-${size})"/>
-<rect x="48" y="50" width="9"  height="12" rx="4.5" fill="white" opacity=".28"/>
-<rect x="46" y="48" width="44" height="3"  rx="1.5" fill="white" opacity=".22"/>
-<!-- tubo vertical pump -->
-<rect x="63" y="8" width="10" height="42" rx="4" fill="url(#sh-pump-${size})"/>
-<rect x="65" y="10" width="3" height="38" rx="1.5" fill="white" opacity=".28"/>
-<!-- cabeza pump (horizontal) -->
-<path d="M30,8 Q32,2 50,4 L74,6 Q78,6 78,12 L74,18 Q60,18 50,16 Q32,16 30,10 Z" fill="url(#sh-pump-${size})"/>
-<rect x="34" y="6" width="10" height="6" rx="3" fill="white" opacity=".24"/>
-<!-- punta pump -->
-<ellipse cx="32" cy="10" rx="6" ry="5" fill="#b0c0ca"/>
-<ellipse cx="32" cy="9"  rx="4" ry="3" fill="#ccd6de"/>
-</svg>`;
-}
+    <!-- Base -->
+    <path d="M82 355 Q140 378 198 355" fill="none" stroke="#24465d" stroke-width="3" opacity=".55"/>
+  </svg>
+</div>
 
 /* ============================================================
    GEL — pote grande ancho de vidrio transparente
