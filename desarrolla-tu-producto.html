@@ -1,0 +1,839 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Desarrollá tu Producto | Laboratorio Genus</title>
+  <meta name="description" content="Diseñá tu producto cosmético personalizado. Elegí activos, textura, color y aroma. Solicitá tu muestra con Laboratorio Genus." />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles-internal.css" />
+  <style>
+    :root {
+      --aqua:#169ab0;--aqua-dark:#0e7a8d;--aqua-light:#e8f6f9;
+      --dark:#07172f;--mid:#3a4a5a;--light:#f5f8fa;
+      --border:#dde3e8;--white:#ffffff;
+      --radius:14px;--shadow-md:0 8px 32px rgba(7,23,47,.10);
+      --shadow-lg:0 20px 60px rgba(7,23,47,.14);
+    }
+
+    /* ── progress bar ── */
+    .dtp-progress-bar{background:var(--white);border-bottom:1px solid var(--border);}
+    .dtp-progress-inner{
+      width:min(1100px,calc(100% - 48px));margin:0 auto;
+      display:flex;align-items:center;padding:18px 0;
+    }
+    .dtp-step-item{
+      flex:1;display:flex;align-items:center;gap:10px;
+      font-size:13px;font-weight:600;color:#a0b4be;
+    }
+    .dtp-step-item::after{
+      content:'';flex:1;height:2px;background:var(--border);
+      border-radius:2px;margin-left:10px;
+    }
+    .dtp-step-item:last-child::after{display:none;}
+    .dtp-step-num{
+      width:30px;height:30px;border-radius:50%;
+      border:2px solid var(--border);background:var(--white);
+      display:flex;align-items:center;justify-content:center;
+      font-size:12px;font-weight:900;color:#a0b4be;flex-shrink:0;
+      transition:all .2s;
+    }
+    .dtp-step-item.active .dtp-step-num{background:var(--aqua);border-color:var(--aqua);color:#fff;}
+    .dtp-step-item.active{color:var(--aqua);font-weight:700;}
+    .dtp-step-item.done .dtp-step-num{background:var(--aqua);border-color:var(--aqua);color:#fff;}
+    .dtp-step-item.done::after{background:var(--aqua);}
+    .dtp-step-label{white-space:nowrap;}
+
+    /* ── wrap ── */
+    .dtp-wrap{
+      width:min(1100px,calc(100% - 48px));
+      margin:0 auto;padding:52px 0 80px;
+    }
+    .dtp-panel{display:none;}
+    .dtp-panel.active{display:block;}
+
+    /* ── badge ── */
+    .dtp-badge{
+      display:inline-block;background:var(--aqua);color:#fff;
+      font-size:11px;font-weight:900;letter-spacing:.08em;
+      text-transform:uppercase;padding:5px 14px;
+      border-radius:100px;margin-bottom:18px;
+    }
+
+    /* ── PASO 1 ── */
+    .dtp-step1-title{font-size:clamp(26px,3.5vw,38px);font-weight:900;color:var(--dark);margin:0 0 8px;}
+    .dtp-step1-sub{font-size:16px;color:var(--mid);margin:0 0 40px;}
+
+    .dtp-products-grid{
+      display:grid;grid-template-columns:repeat(4,1fr);
+      gap:22px;margin-bottom:44px;
+    }
+    .dtp-product-card{
+      background:var(--white);border:2px solid var(--border);
+      border-radius:var(--radius);padding:28px 20px 22px;
+      text-align:center;cursor:pointer;position:relative;
+      transition:border-color .2s,box-shadow .2s,transform .18s;
+      user-select:none;
+    }
+    .dtp-product-card:hover{
+      border-color:rgba(22,154,176,.4);
+      box-shadow:0 12px 40px rgba(7,23,47,.10);
+      transform:translateY(-3px);
+    }
+    .dtp-product-card.selected{
+      border-color:var(--aqua);
+      box-shadow:0 0 0 4px rgba(22,154,176,.14),var(--shadow-md);
+      transform:translateY(-3px);
+    }
+    .dtp-card-check{
+      position:absolute;top:12px;right:12px;
+      width:26px;height:26px;border-radius:50%;
+      background:var(--aqua);color:#fff;
+      display:none;align-items:center;justify-content:center;
+      font-size:13px;font-weight:900;
+      box-shadow:0 2px 8px rgba(22,154,176,.35);
+    }
+    .dtp-product-card.selected .dtp-card-check{display:flex;}
+    .dtp-product-img-wrap{
+      height:180px;display:flex;align-items:center;
+      justify-content:center;margin-bottom:18px;
+      background:radial-gradient(ellipse at 50% 88%,#e4eff3 0%,#f2f7f9 50%,transparent 100%);
+      border-radius:10px;overflow:hidden;position:relative;
+    }
+    .dtp-card-img{
+      max-height:170px;max-width:90%;
+      object-fit:contain;display:block;
+      filter:drop-shadow(0 8px 18px rgba(7,23,47,.14));
+      transition:transform .25s ease;
+    }
+    .dtp-product-card:hover .dtp-card-img{transform:scale(1.04) translateY(-3px);}
+    /* wrapper imagen paso 2 */
+    .dtp-col-img-preview{
+      position:relative;
+    }
+    .dtp-preview-img-wrap{
+      width:100%;height:100%;display:flex;
+      align-items:center;justify-content:center;
+      position:relative;
+    }
+    .dtp-preview-img{
+      max-height:200px;max-width:90%;
+      object-fit:contain;display:block;
+      filter:drop-shadow(0 10px 24px rgba(7,23,47,.16));
+      position:relative;z-index:1;
+    }
+    /* overlay de color sobre la imagen — multiply blend */
+    .dtp-color-overlay{
+      position:absolute;inset:0;
+      border-radius:8px;
+      pointer-events:none;z-index:2;
+      mix-blend-mode:multiply;
+      opacity:0;
+      transition:opacity .3s, background .3s;
+    }
+    .dtp-color-overlay.visible{opacity:.38;}
+    /* render stage paso 3 */
+    .dtp-render-img-wrap{
+      position:relative;display:inline-block;
+    }
+    .dtp-render-img{
+      max-height:340px;max-width:100%;
+      object-fit:contain;display:block;
+      filter:drop-shadow(0 24px 40px rgba(7,23,47,.18));
+      position:relative;z-index:1;
+    }
+    .dtp-render-color-overlay{
+      position:absolute;inset:0;
+      pointer-events:none;z-index:2;
+      mix-blend-mode:multiply;
+      opacity:0;border-radius:4px;
+      transition:opacity .3s, background .3s;
+    }
+    .dtp-render-color-overlay.visible{opacity:.4;}
+    .dtp-product-name{
+      font-size:13px;font-weight:900;letter-spacing:.1em;
+      text-transform:uppercase;color:var(--dark);
+    }
+
+    /* ── Botones wizard ── */
+    .dtp-nav{
+      display:flex;align-items:center;justify-content:space-between;
+      gap:16px;margin-top:40px;padding-top:28px;
+      border-top:1px solid var(--border);
+    }
+    .dtp-nav.center{justify-content:center;}
+    .dtp-btn-back{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:14px 26px;border:2px solid var(--border);
+      border-radius:8px;background:transparent;
+      font-size:14px;font-weight:700;color:var(--mid);
+      cursor:pointer;font-family:inherit;
+      transition:border-color .18s,color .18s;
+    }
+    .dtp-btn-back:hover{border-color:var(--dark);color:var(--dark);}
+    .dtp-btn-next{
+      display:inline-flex;align-items:center;gap:10px;
+      padding:16px 38px;background:var(--aqua);color:#fff;
+      border:none;border-radius:8px;font-size:15px;font-weight:900;
+      letter-spacing:.04em;text-transform:uppercase;
+      cursor:pointer;font-family:inherit;
+      transition:background .18s,transform .15s;
+    }
+    .dtp-btn-next:hover{background:var(--aqua-dark);transform:translateY(-1px);}
+    .dtp-btn-pay{
+      display:flex;align-items:center;justify-content:center;
+      flex-direction:column;gap:4px;
+      padding:20px 48px;background:var(--dark);color:#fff;
+      border:none;border-radius:10px;
+      font-size:16px;font-weight:900;letter-spacing:.05em;
+      text-transform:uppercase;cursor:pointer;font-family:inherit;
+      transition:background .18s;width:100%;margin-top:16px;
+      line-height:1.2;
+    }
+    .dtp-btn-pay:hover{background:var(--aqua-dark);}
+    .dtp-btn-pay small{font-size:11px;font-weight:400;letter-spacing:.02em;opacity:.8;}
+
+    /* ── PASO 2 ── */
+    .dtp-step2-header{margin-bottom:36px;}
+    .dtp-step2-header h2{font-size:clamp(24px,3vw,34px);font-weight:900;color:var(--dark);margin:0 0 6px;}
+    .dtp-step2-header p{font-size:15px;color:var(--mid);margin:0;}
+
+    .dtp-step2-grid{
+      display:grid;grid-template-columns:280px 1fr 1fr;
+      gap:24px;align-items:start;
+    }
+    .dtp-col-img{
+      background:var(--white);border:1px solid var(--border);
+      border-radius:var(--radius);padding:28px 20px;
+    }
+    .dtp-col-img-preview{
+      width:100%;aspect-ratio:1;border-radius:12px;
+      background:radial-gradient(ellipse at 50% 85%,#ddeef3 0%,#eef6f9 50%,#f4f8fa 100%);
+      display:flex;align-items:center;justify-content:center;
+      margin-bottom:18px;overflow:hidden;
+    }
+    .dtp-selected-name{font-size:16px;font-weight:900;color:var(--dark);margin-bottom:4px;}
+    .dtp-selected-content{font-size:13px;color:var(--mid);margin-bottom:22px;}
+
+    .dtp-col-form{
+      background:var(--white);border:1px solid var(--border);
+      border-radius:var(--radius);padding:28px 24px;
+    }
+    .dtp-col-form-title{
+      font-size:11px;font-weight:900;letter-spacing:.1em;
+      text-transform:uppercase;color:var(--aqua);margin-bottom:22px;
+    }
+    .dtp-field{margin-bottom:18px;}
+    .dtp-field label{
+      display:block;font-size:11px;font-weight:900;
+      letter-spacing:.08em;text-transform:uppercase;
+      color:var(--mid);margin-bottom:7px;
+    }
+    .dtp-field input,.dtp-field select,.dtp-field textarea{
+      width:100%;padding:12px 14px;
+      border:2px solid var(--border);border-radius:8px;
+      font-size:14px;font-family:inherit;color:var(--dark);
+      background:var(--white);outline:none;box-sizing:border-box;
+      transition:border-color .18s,box-shadow .18s;
+    }
+    .dtp-field input:focus,.dtp-field select:focus,.dtp-field textarea:focus{
+      border-color:var(--aqua);box-shadow:0 0 0 3px rgba(22,154,176,.12);
+    }
+    .dtp-field input[readonly]{background:var(--light);color:var(--mid);cursor:default;}
+    .dtp-field textarea{resize:vertical;min-height:100px;}
+
+    /* ── Multi-activos chips ── */
+    .dtp-activos-grid{
+      display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px;
+    }
+    .dtp-activo-chip{
+      padding:7px 14px;border:2px solid var(--border);
+      border-radius:100px;font-size:13px;font-weight:600;
+      color:var(--mid);cursor:pointer;background:var(--white);
+      transition:all .18s;user-select:none;white-space:nowrap;
+    }
+    .dtp-activo-chip:hover{border-color:rgba(22,154,176,.5);color:var(--aqua);}
+    .dtp-activo-chip.selected{
+      background:var(--aqua);border-color:var(--aqua);color:#fff;
+      font-weight:700;
+    }
+    .dtp-activos-note{font-size:12px;color:var(--mid);margin-top:6px;}
+    .dtp-activos-note.warn{color:#e55;font-weight:600;}
+
+    /* ── PASO 3 ── */
+    .dtp-step3-banner{
+      background:linear-gradient(135deg,#e2f4f8 0%,#f0f8fb 50%,#f8fbfc 100%);
+      border-radius:20px;padding:48px 40px 40px;
+      text-align:center;margin-bottom:44px;
+      position:relative;overflow:hidden;
+    }
+    .dtp-step3-banner::before{
+      content:'';position:absolute;top:-60px;right:-60px;
+      width:200px;height:200px;border-radius:50%;
+      background:rgba(22,154,176,.07);
+    }
+    .dtp-step3-banner::after{
+      content:'';position:absolute;bottom:-40px;left:-40px;
+      width:160px;height:160px;border-radius:50%;
+      background:rgba(22,154,176,.05);
+    }
+    .dtp-step3-banner h2{
+      font-size:clamp(28px,4vw,46px);font-weight:900;
+      color:var(--dark);margin:0 0 10px;position:relative;z-index:1;
+    }
+    .dtp-step3-banner p{
+      font-size:17px;color:var(--mid);margin:0 0 6px;
+      position:relative;z-index:1;
+    }
+    .dtp-step3-banner .sub{
+      font-size:22px;font-weight:700;color:var(--aqua);
+      margin:0;position:relative;z-index:1;
+    }
+
+    .dtp-step3-grid{display:grid;grid-template-columns:1fr 360px;gap:40px;align-items:start;}
+    .dtp-render-stage{
+      display:flex;align-items:center;justify-content:center;
+      min-height:360px;padding:40px;
+      background:radial-gradient(ellipse at 50% 75%,#ddeef4 0%,#eef6f9 45%,#f4f8fa 100%);
+      border-radius:20px;position:relative;
+    }
+    /* Sombra de producto en el suelo */
+    .dtp-render-stage::after{
+      content:'';position:absolute;
+      bottom:30px;left:50%;transform:translateX(-50%);
+      width:180px;height:18px;border-radius:50%;
+      background:radial-gradient(ellipse,rgba(7,23,47,.18) 0%,transparent 70%);
+    }
+    .dtp-render-svg-wrap{position:relative;z-index:1;filter:drop-shadow(0 24px 40px rgba(7,23,47,.18));}
+
+    /* ── Resumen ── */
+    .dtp-summary{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:28px 24px;}
+    .dtp-summary-title{font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--aqua);margin-bottom:20px;}
+    .dtp-summary-row{
+      display:flex;align-items:flex-start;gap:14px;
+      padding:10px 0;border-bottom:1px solid var(--border);font-size:14px;
+    }
+    .dtp-summary-row:last-child{border-bottom:none;}
+    .dtp-summary-row svg{color:var(--aqua);flex-shrink:0;margin-top:2px;}
+    .dtp-summary-row label{color:var(--mid);flex:0 0 105px;font-weight:600;font-size:13px;}
+    .dtp-summary-row span{color:var(--dark);font-weight:700;font-size:13px;}
+
+    /* ── PASO 4 ── */
+    .dtp-step4-header{margin-bottom:36px;text-align:center;}
+    .dtp-step4-header h2{font-size:clamp(22px,3vw,32px);font-weight:900;color:var(--dark);margin:0 0 8px;}
+    .dtp-step4-header p{font-size:15px;color:var(--mid);margin:0;}
+    .dtp-step4-grid{display:grid;grid-template-columns:1fr 360px;gap:40px;align-items:start;}
+    .dtp-sidebar-col{position:sticky;top:88px;}
+    .dtp-order-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+    .dtp-order-card-header{background:var(--dark);color:#fff;padding:16px 20px;font-size:12px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;}
+    .dtp-order-card-body{padding:22px 20px;}
+    .dtp-order-product-preview{display:flex;align-items:center;gap:16px;padding-bottom:16px;border-bottom:1px solid var(--border);margin-bottom:16px;}
+    .dtp-order-img{
+      width:80px;height:80px;border-radius:10px;flex-shrink:0;
+      background:radial-gradient(ellipse at 50% 80%,#ddeef3 0%,#f0f8fa 100%);
+      display:flex;align-items:center;justify-content:center;overflow:hidden;
+    }
+    .dtp-order-details{font-size:12px;line-height:1.8;}
+    .dtp-order-details strong{display:block;font-size:13px;color:var(--dark);margin-bottom:2px;}
+    .dtp-order-details span{color:var(--mid);display:block;}
+    .dtp-price-row{display:flex;justify-content:space-between;align-items:center;font-size:14px;padding:9px 0;border-bottom:1px solid var(--border);}
+    .dtp-price-row label{color:var(--mid);font-size:13px;}
+    .dtp-price-row span{font-weight:700;color:var(--dark);}
+    .dtp-price-total{display:flex;justify-content:space-between;align-items:center;font-size:17px;font-weight:900;padding:14px 0 8px;}
+    .dtp-price-total label{color:var(--dark);}
+    .dtp-price-total span{color:var(--aqua);}
+    .dtp-secure-note{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid);margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}
+
+    /* ── Responsive ── */
+    @media(max-width:960px){
+      .dtp-step2-grid{grid-template-columns:1fr 1fr;}
+      .dtp-col-img{grid-column:1/-1;display:flex;gap:20px;align-items:flex-start;}
+      .dtp-col-img-preview{width:130px;flex-shrink:0;margin-bottom:0;}
+      .dtp-step3-grid,.dtp-step4-grid{grid-template-columns:1fr;}
+      .dtp-sidebar-col{position:static;}
+    }
+    @media(max-width:640px){
+      .dtp-products-grid{grid-template-columns:repeat(2,1fr);}
+      .dtp-step2-grid{grid-template-columns:1fr;}
+      .dtp-col-img{flex-direction:column;}
+      .dtp-col-img-preview{width:100%;}
+      .dtp-step3-banner{padding:32px 20px 28px;}
+      .dtp-step-label{display:none;}
+      .dtp-step-item::after{margin-left:4px;}
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="g-nav">
+  <div class="g-nav-inner">
+    <a class="g-nav-logo" href="index.html"><img src="assets/logo-genus.png" alt="Laboratorio Genus"></a>
+    <ul class="g-nav-links" id="navLinks">
+      <li><a href="index.html">Inicio</a></li>
+      <li><a href="quienes-somos.html">Nosotros</a></li>
+      <li><a href="productos.html">Productos</a></li>
+      <li><a href="calidad.html">Calidad</a></li>
+      <li><a href="llave-en-mano.html">Llave en mano</a></li>
+      <li><a href="contacto.html">Contacto</a></li>
+      <li><a href="desarrolla-tu-producto.html" class="active" style="background:var(--aqua);color:#fff;border-radius:6px;padding:8px 14px;font-weight:900;">Desarrollá tu producto</a></li>
+    </ul>
+    <div class="g-nav-actions">
+      <a class="g-btn-wa" href="https://wa.me/5491124980861" target="_blank">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.089.539 4.048 1.481 5.751L0 24l6.389-1.474A11.944 11.944 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.803 9.803 0 0 1-5.003-1.372l-.359-.213-3.721.858.88-3.62-.234-.372A9.795 9.795 0 0 1 2.182 12C2.182 6.578 6.578 2.182 12 2.182S21.818 6.578 21.818 12 17.422 21.818 12 21.818z"/></svg>
+        WhatsApp
+      </a>
+    </div>
+    <button class="g-nav-hamburger" id="hamburger" aria-label="Menú"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<!-- BARRA DE PROGRESO -->
+<div class="dtp-progress-bar">
+  <div class="dtp-progress-inner">
+    <div class="dtp-step-item active" id="prog1"><div class="dtp-step-num">1</div><span class="dtp-step-label">Elegí el producto</span></div>
+    <div class="dtp-step-item" id="prog2"><div class="dtp-step-num">2</div><span class="dtp-step-label">Personalizá</span></div>
+    <div class="dtp-step-item" id="prog3"><div class="dtp-step-num">3</div><span class="dtp-step-label">Tu producto</span></div>
+    <div class="dtp-step-item" id="prog4"><div class="dtp-step-num">4</div><span class="dtp-step-label">Finalizá</span></div>
+  </div>
+</div>
+
+<!-- WIZARD -->
+<div class="dtp-wrap">
+
+  <!-- ═══════ PASO 1 ═══════ -->
+  <div class="dtp-panel active" id="panel1">
+    <span class="dtp-badge">PASO 1 DE 4</span>
+    <h2 class="dtp-step1-title">¿Qué producto querés desarrollar?</h2>
+    <p class="dtp-step1-sub">Elegí el tipo de producto que querés crear.</p>
+    <div class="dtp-products-grid">
+
+      <!-- SERUM -->
+      <div class="dtp-product-card" data-product="Serum" data-content="30 ml" onclick="selectProduct(this)">
+        <div class="dtp-card-check">&#10003;</div>
+        <div class="dtp-product-img-wrap" id="card-Serum"></div>
+        <div class="dtp-product-name">Serum</div>
+      </div>
+
+      <!-- CREMA -->
+      <div class="dtp-product-card" data-product="Crema" data-content="50 gr" onclick="selectProduct(this)">
+        <div class="dtp-card-check">&#10003;</div>
+        <div class="dtp-product-img-wrap" id="card-Crema"></div>
+        <div class="dtp-product-name">Crema</div>
+      </div>
+
+      <!-- SHAMPOO -->
+      <div class="dtp-product-card" data-product="Shampoo" data-content="200 ml" onclick="selectProduct(this)">
+        <div class="dtp-card-check">&#10003;</div>
+        <div class="dtp-product-img-wrap" id="card-Shampoo"></div>
+        <div class="dtp-product-name">Shampoo</div>
+      </div>
+
+      <!-- GEL -->
+      <div class="dtp-product-card" data-product="Gel" data-content="250 gr" onclick="selectProduct(this)">
+        <div class="dtp-card-check">&#10003;</div>
+        <div class="dtp-product-img-wrap" id="card-Gel"></div>
+        <div class="dtp-product-name">Gel</div>
+      </div>
+
+    </div>
+    <div class="dtp-nav center">
+      <button class="dtp-btn-next" onclick="goStep(1,2)">SIGUIENTE &nbsp;&#8594;</button>
+    </div>
+  </div>
+
+  <!-- ═══════ PASO 2 ═══════ -->
+  <div class="dtp-panel" id="panel2">
+    <div class="dtp-step2-header">
+      <span class="dtp-badge">PASO 2 DE 4</span>
+      <h2>Personalizá tu producto</h2>
+      <p>Completá los detalles para crear tu fórmula ideal.</p>
+    </div>
+    <div class="dtp-step2-grid">
+      <div class="dtp-col-img">
+        <div class="dtp-col-img-preview" id="step2ImgPreview">
+          <!-- SVG mockup inyectado por JS -->
+        </div>
+        <div class="dtp-selected-name" id="step2ProductName">—</div>
+        <div class="dtp-selected-content" id="step2ContentLabel">Contenido neto: —</div>
+        <div class="dtp-field"><label>Marca</label><input type="text" id="f2_marca" placeholder="Escribí el nombre de tu marca"></div>
+        <div class="dtp-field"><label>Nombre del producto</label><input type="text" id="f2_nombre" placeholder="Ej. Crema Hidratante Antiage"></div>
+        <div class="dtp-field"><label>Contenido neto</label><input type="text" id="f2_contenido" readonly></div>
+      </div>
+      <div class="dtp-col-form">
+        <div class="dtp-col-form-title">Información básica</div>
+        <div class="dtp-field">
+          <label>Activos <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:11px;">(seleccioná entre 1 y 3)</span></label>
+          <div class="dtp-activos-grid" id="activosGrid"></div>
+          <div class="dtp-activos-note" id="activosNote">Seleccioná al menos 1 activo para continuar.</div>
+        </div>
+        <div class="dtp-field">
+          <label>Textura</label>
+          <select id="f2_textura">
+            <option value="">Seleccioná una textura...</option>
+            <option>Nutritiva / Hidratante</option>
+            <option>Crema Gel / Liviana</option>
+          </select>
+        </div>
+      </div>
+      <div class="dtp-col-form">
+        <div class="dtp-col-form-title">Personalizá tu fórmula</div>
+        <div class="dtp-field">
+          <label>Color</label>
+          <select id="f2_color">
+            <option value="">Seleccioná un color...</option>
+          </select>
+        </div>
+        <div class="dtp-field">
+          <label>Aroma</label>
+          <select id="f2_aroma">
+            <option value="">Seleccioná un aroma...</option>
+            <option>Ninguno</option>
+            <option>Florales</option>
+            <option>Cítricas</option>
+            <option>Frutales</option>
+            <option>Dulce</option>
+            <option>Herbales</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="dtp-nav">
+      <button class="dtp-btn-back" onclick="goStep(2,1)">&#8592;&nbsp; Anterior</button>
+      <button class="dtp-btn-next" onclick="goStep(2,3)">SIGUIENTE &nbsp;&#8594;</button>
+    </div>
+  </div>
+
+  <!-- ═══════ PASO 3 ═══════ -->
+  <div class="dtp-panel" id="panel3">
+    <div class="dtp-step3-banner">
+      <span class="dtp-badge">PASO 3 DE 4</span>
+      <h2>¡Felicidades!</h2>
+      <p>Creaste tu primer producto con Laboratorio Genus.</p>
+      <p class="sub">Solicitá tu muestra.</p>
+    </div>
+    <div class="dtp-step3-grid">
+      <div class="dtp-render-stage">
+        <div class="dtp-render-svg-wrap" id="step3Render">
+          <!-- SVG mockup inyectado por JS -->
+        </div>
+      </div>
+      <div class="dtp-summary" id="step3Summary">
+        <div class="dtp-summary-title">Resumen de tu producto</div>
+      </div>
+    </div>
+    <div class="dtp-nav">
+      <button class="dtp-btn-back" onclick="goStep(3,2)">&#8592;&nbsp; Anterior</button>
+      <button class="dtp-btn-next" onclick="goStep(3,4)">CONTINUAR CON EL PAGO &nbsp;&#8594;</button>
+    </div>
+  </div>
+
+  <!-- ═══════ PASO 4 ═══════ -->
+  <div class="dtp-panel" id="panel4">
+    <div class="dtp-step4-header">
+      <span class="dtp-badge">PASO 4 DE 4</span>
+      <h2>Completá tus datos para finalizar</h2>
+      <p>Te enviaremos la información de tu pedido.</p>
+    </div>
+    <div class="dtp-step4-grid">
+      <div class="dtp-form-col">
+        <div class="dtp-field"><label>Marca</label><input type="text" id="f4_marca" placeholder="Escribí el nombre de tu marca"></div>
+        <div class="dtp-field"><label>Nombre y Apellido</label><input type="text" id="f4_nombre" placeholder="Ej. Juan Pérez"></div>
+        <div class="dtp-field"><label>Teléfono / WhatsApp</label><input type="tel" id="f4_tel" placeholder="Ej. +54 9 11 2345-6789"></div>
+        <div class="dtp-field"><label>Email</label><input type="email" id="f4_email" placeholder="Ej. contacto@tumarca.com"></div>
+        <div class="dtp-field"><label>Comentarios (opcional)</label><textarea id="f4_comentarios" placeholder="Contanos algo más sobre tu proyecto..."></textarea></div>
+        <div class="dtp-nav" style="border:none;padding:0;margin-top:16px;">
+          <button class="dtp-btn-back" onclick="goStep(4,3)">&#8592;&nbsp; Anterior</button>
+        </div>
+      </div>
+      <div class="dtp-sidebar-col">
+        <div class="dtp-order-card">
+          <div class="dtp-order-card-header">Tu producto</div>
+          <div class="dtp-order-card-body">
+            <div class="dtp-order-product-preview">
+              <div class="dtp-order-img" id="step4Img">
+                <!-- SVG mockup inyectado por JS -->
+              </div>
+              <div class="dtp-order-details" id="step4Details"></div>
+            </div>
+            <div id="step4Summary"></div>
+            <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px;">
+              <div class="dtp-price-row">
+                <label>Desarrollo de fórmula personalizada</label>
+                <span id="precioDisplay">$ 15.000</span>
+              </div>
+              <div class="dtp-price-total">
+                <label>Total</label>
+                <span id="totalDisplay">$ 15.000</span>
+              </div>
+            </div>
+            <div class="dtp-secure-note">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              El pago es 100% seguro a través de Mercado Pago.
+            </div>
+            <button class="dtp-btn-pay" onclick="realizarPago()">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                REALIZAR PAGO
+              </div>
+              <small>Serás redirigido a Mercado Pago</small>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /dtp-wrap -->
+
+<!-- FOOTER -->
+<footer class="g-footer">
+  <div class="g-footer-inner">
+    <img class="g-footer-logo" src="assets/logo-genus.png" alt="Laboratorio Genus">
+    <div class="g-footer-info">
+      <strong>Laboratorio Genus</strong>
+      ventas@laboratoriogenus.com.ar<br>
+      +54 9 11 2498-0861 · Buenos Aires, Argentina
+    </div>
+    <a class="g-footer-cta" href="cotizador.html">Solicitar cotización →</a>
+  </div>
+</footer>
+
+<script src="mockups.js"></script>
+<script>
+/* ═══════════════════════════════════════════
+   CONFIGURACIÓN
+═══════════════════════════════════════════ */
+const MERCADOPAGO_URL = "https://link.mercadopago.com.ar/REEMPLAZAR_CON_TU_LINK";
+const PRECIO_FORMULA  = 15000;
+
+const CONTENIDOS = { Serum:'30 ml', Crema:'50 gr', Shampoo:'200 ml', Gel:'250 gr' };
+
+const ACTIVOS_POR_PRODUCTO = {
+  Serum:   ['Ácido Hialurónico','Niacinamida','Vitamina C','Retinol','Colágeno','Pantenol','Aloe Vera','Cafeína','Ácido Glicólico','Vitamina E'],
+  Crema:   ['Ácido Hialurónico','Niacinamida','Vitamina C','Retinol','Colágeno','Pantenol','Aloe Vera','Cafeína','Vitamina E'],
+  Shampoo: ['Pantenol','Aloe Vera','Colágeno','Cafeína','Vitamina E','Niacinamida'],
+  Gel:     ['Ácido Hialurónico','Niacinamida','Aloe Vera','Pantenol','Cafeína','Ácido Glicólico'],
+};
+
+const COLORES_BASE         = ['Incoloro','Blanco','Rosa','Rojo','Azul','Amarillo','Verde','Lila'];
+const COLORES_SIN_INCOLORO = ['Blanco','Rosa','Rojo','Azul','Amarillo','Verde','Lila'];
+
+/* ── Estado ── */
+const cfg = {
+  producto:'', contenido:'', marca:'', nombreProducto:'',
+  activos:[], textura:'', color:'', aroma:'',
+  nombrePersona:'', telefono:'', email:'', comentarios:''
+};
+
+/* ── Helper: inyectar SVG ── */
+function setMockup(elId, producto, color, size) {
+  const el = document.getElementById(elId);
+  if (el) el.innerHTML = GENUS_MOCKUP.getSVG(producto || 'Crema', color || 'Incoloro', size);
+}
+
+/* ── Init tarjetas paso 1 con color Incoloro ── */
+document.addEventListener('DOMContentLoaded', () => {
+  ['Serum','Crema','Shampoo','Gel'].forEach(p => {
+    const el = document.getElementById('card-' + p);
+    if (el) el.innerHTML = GENUS_MOCKUP.getSVG(p, 'Incoloro', 148);
+  });
+});
+
+/* ═══════════════════════════════════════════
+   PASO 1
+═══════════════════════════════════════════ */
+function selectProduct(el) {
+  document.querySelectorAll('.dtp-product-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  cfg.producto = el.dataset.product;
+  cfg.contenido = el.dataset.content;
+  cfg.activos = [];
+  cfg.color = '';
+}
+
+/* ═══════════════════════════════════════════
+   NAVEGACIÓN
+═══════════════════════════════════════════ */
+function goStep(from, to) {
+  if (from===1 && to===2) {
+    if (!cfg.producto) { alert('Por favor seleccioná un producto para continuar.'); return; }
+    prepareStep2();
+  }
+  if (from===2 && to===3) {
+    if (cfg.activos.length===0)    { alert('Por favor seleccioná al menos 1 activo.'); return; }
+    if (!document.getElementById('f2_textura').value) { alert('Por favor seleccioná una textura.'); return; }
+    if (!document.getElementById('f2_color').value)   { alert('Por favor seleccioná un color.'); return; }
+    if (!document.getElementById('f2_aroma').value)   { alert('Por favor seleccioná un aroma.'); return; }
+    saveStep2();
+    prepareStep3();
+  }
+  if (from===3 && to===4) { prepareStep4(); }
+
+  document.querySelectorAll('.dtp-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel'+to).classList.add('active');
+  for (let i=1;i<=4;i++){
+    const it=document.getElementById('prog'+i);
+    it.classList.remove('active','done');
+    if(i<to) it.classList.add('done');
+    if(i===to) it.classList.add('active');
+  }
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ═══════════════════════════════════════════
+   PASO 2
+═══════════════════════════════════════════ */
+function prepareStep2() {
+  document.getElementById('step2ProductName').textContent = cfg.producto;
+  document.getElementById('step2ContentLabel').textContent = 'Contenido neto: ' + cfg.contenido;
+  document.getElementById('f2_contenido').value = cfg.contenido;
+
+  // Mockup SVG con color actual
+  setMockup('step2ImgPreview', cfg.producto, cfg.color || 'Incoloro', 190);
+
+  // Chips activos
+  const grid = document.getElementById('activosGrid');
+  const activos = ACTIVOS_POR_PRODUCTO[cfg.producto] || [];
+  grid.innerHTML = activos.map(a =>
+    `<div class="dtp-activo-chip${cfg.activos.includes(a)?' selected':''}" onclick="toggleActivo(this,'${a}')">${a}</div>`
+  ).join('');
+  updateActivosNote();
+
+  // Colores según producto
+  const colorSel = document.getElementById('f2_color');
+  const colores = cfg.producto==='Crema' ? COLORES_SIN_INCOLORO : COLORES_BASE;
+  colorSel.innerHTML = '<option value="">Seleccioná un color...</option>' +
+    colores.map(c=>`<option${cfg.color===c?' selected':''}>${c}</option>`).join('');
+
+  // Actualizar mockup al cambiar color
+  colorSel.onchange = () => {
+    setMockup('step2ImgPreview', cfg.producto, colorSel.value || 'Incoloro', 190);
+  };
+
+  // Pre-rellenar campos
+  if(cfg.marca)          document.getElementById('f2_marca').value = cfg.marca;
+  if(cfg.nombreProducto) document.getElementById('f2_nombre').value = cfg.nombreProducto;
+  if(cfg.textura)        document.getElementById('f2_textura').value = cfg.textura;
+  if(cfg.aroma)          document.getElementById('f2_aroma').value = cfg.aroma;
+}
+
+function toggleActivo(el, nombre) {
+  if (cfg.activos.includes(nombre)) {
+    cfg.activos = cfg.activos.filter(a=>a!==nombre);
+    el.classList.remove('selected');
+  } else {
+    if (cfg.activos.length>=3) {
+      const note=document.getElementById('activosNote');
+      note.textContent='Podés seleccionar hasta 3 activos.';
+      note.classList.add('warn');
+      setTimeout(()=>{ note.classList.remove('warn'); updateActivosNote(); },2200);
+      return;
+    }
+    cfg.activos.push(nombre);
+    el.classList.add('selected');
+  }
+  updateActivosNote();
+}
+
+function updateActivosNote(){
+  const n=document.getElementById('activosNote');
+  n.classList.remove('warn');
+  if(cfg.activos.length===0)      n.textContent='Seleccioná al menos 1 activo para continuar.';
+  else if(cfg.activos.length<3)   n.textContent=`${cfg.activos.length} seleccionado${cfg.activos.length>1?'s':''}. Podés sumar hasta ${3-cfg.activos.length} más.`;
+  else                             n.textContent='Máximo de 3 activos alcanzado.';
+}
+
+function saveStep2(){
+  cfg.marca          = document.getElementById('f2_marca').value;
+  cfg.nombreProducto = document.getElementById('f2_nombre').value;
+  cfg.textura        = document.getElementById('f2_textura').value;
+  cfg.color          = document.getElementById('f2_color').value;
+  cfg.aroma          = document.getElementById('f2_aroma').value;
+}
+
+/* ═══════════════════════════════════════════
+   PASO 3
+═══════════════════════════════════════════ */
+function prepareStep3(){
+  // Mockup grande con color seleccionado
+  setMockup('step3Render', cfg.producto, cfg.color, 260);
+
+  const rows=[
+    [iconBox,'Producto',cfg.producto],
+    [iconDrop,'Activos',cfg.activos.join(', ')||'—'],
+    [iconLayer,'Textura',cfg.textura],
+    [iconCircle,'Color',cfg.color],
+    [iconWave,'Aroma',cfg.aroma],
+    [iconPkg,'Contenido neto',cfg.contenido],
+  ];
+  document.getElementById('step3Summary').innerHTML=
+    `<div class="dtp-summary-title">Resumen de tu producto</div>`+
+    rows.map(([ic,lb,vl])=>`<div class="dtp-summary-row">${ic}<label>${lb}</label><span>${vl||'—'}</span></div>`).join('');
+}
+
+/* ═══════════════════════════════════════════
+   PASO 4
+═══════════════════════════════════════════ */
+function prepareStep4(){
+  if(cfg.marca) document.getElementById('f4_marca').value=cfg.marca;
+
+  // Mockup pequeño sidebar
+  setMockup('step4Img', cfg.producto, cfg.color, 68);
+
+  document.getElementById('step4Details').innerHTML=
+    `<strong>${cfg.producto}</strong>`+
+    `<span>Activos: ${cfg.activos.join(', ')}</span>`+
+    `<span>Textura: ${cfg.textura}</span>`+
+    `<span>Color: ${cfg.color}</span>`+
+    `<span>Aroma: ${cfg.aroma}</span>`+
+    `<span>Contenido: ${cfg.contenido}</span>`;
+
+  const precio=`$ ${PRECIO_FORMULA.toLocaleString('es-AR')}`;
+  document.getElementById('precioDisplay').textContent=precio;
+  document.getElementById('totalDisplay').textContent=precio;
+}
+
+/* ═══════════════════════════════════════════
+   PAGO
+═══════════════════════════════════════════ */
+function realizarPago(){
+  cfg.nombrePersona=document.getElementById('f4_nombre').value;
+  cfg.telefono=document.getElementById('f4_tel').value;
+  cfg.email=document.getElementById('f4_email').value;
+  cfg.comentarios=document.getElementById('f4_comentarios').value;
+  const m4=document.getElementById('f4_marca').value;
+  if(m4) cfg.marca=m4;
+  if(!cfg.nombrePersona||!cfg.email){alert('Por favor completá tu nombre y email para continuar.');return;}
+
+  const pedido={
+    producto:cfg.producto, marca:cfg.marca, nombreProducto:cfg.nombreProducto,
+    activos:cfg.activos, textura:cfg.textura, color:cfg.color,
+    aroma:cfg.aroma, contenido:cfg.contenido,
+    nombrePersona:cfg.nombrePersona, telefono:cfg.telefono,
+    email:cfg.email, comentarios:cfg.comentarios,
+    precio:PRECIO_FORMULA, timestamp:new Date().toISOString()
+  };
+  /* TODO: enviarWhatsApp(pedido) | enviarGoogleSheets(pedido) | enviarCRM(pedido) */
+  console.log('[Genus] Pedido listo para enviar:',pedido);
+  window.open(MERCADOPAGO_URL,'_blank');
+}
+
+/* ═══════════════════════════════════════════
+   ÍCONOS resumen
+═══════════════════════════════════════════ */
+const ico=d=>`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#169ab0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${d}"/></svg>`;
+const iconBox=ico('M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z');
+const iconDrop=ico('M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z');
+const iconLayer=ico('M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5');
+const iconCircle=`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#169ab0" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>`;
+const iconWave=ico('M2 12c1.5-4 4-6 6-6s4.5 4 7 4 4.5-2 7-2');
+const iconPkg=ico('M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z');
+
+/* NAV */
+document.getElementById('hamburger').addEventListener('click',function(){
+  document.getElementById('navLinks').classList.toggle('open');
+});
+</script>
+</body>
+</html>
