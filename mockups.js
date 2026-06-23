@@ -16,51 +16,230 @@ const FILL_COLORS = {
   Verde:    { base:'rgba( 65,188, 98,0.78)', mid:'rgba( 38,158, 70,0.68)', edge:'rgba( 18,125, 45,0.60)', drop:'rgba(125,218,148,0.88)', surface:'rgba(148,225,165,0.72)' },
   Lila:     { base:'rgba(172,102,230,0.78)', mid:'rgba(142, 68,208,0.68)', edge:'rgba(108, 38,178,0.60)', drop:'rgba(205,158,242,0.88)', surface:'rgba(218,172,245,0.72)' },
 };
+function escapeLabelText(str) {
+  return String(str == null ? '' : str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
 
+function estimateTextWidth(text, fontSize, letterSpacing) {
+  const avgCharWidth = fontSize * 0.60;
+  return text.length * (avgCharWidth + (letterSpacing || 0));
+}
+
+function fitLabelText(text, maxWidth, fontSize, letterSpacing, minFontSize) {
+  text = (text == null ? '' : String(text)).trim().toUpperCase();
+  minFontSize = minFontSize || Math.max(7, Math.round(fontSize * 0.6));
+  if (!text) return { lines: [''], fontSize, letterSpacing };
+
+  let fs = fontSize, ls = letterSpacing || 0;
+  while (fs > minFontSize && estimateTextWidth(text, fs, ls) > maxWidth) {
+    fs -= 1;
+    ls = Math.max(0, ls - 0.15);
+  }
+  if (estimateTextWidth(text, fs, ls) <= maxWidth) {
+    return { lines: [text], fontSize: fs, letterSpacing: ls };
+  }
+
+  // No entra en una sola línea: dividir en dos
+  const words = text.split(' ');
+  let lines;
+  if (words.length > 1) {
+    let best = null;
+    for (let i = 1; i < words.length; i++) {
+      const l1 = words.slice(0, i).join(' ');
+      const l2 = words.slice(i).join(' ');
+      const score = Math.max(estimateTextWidth(l1, fs, ls), estimateTextWidth(l2, fs, ls));
+      if (!best || score < best.score) best = { score, l1, l2 };
+    }
+    lines = [best.l1, best.l2];
+  } else {
+    const mid = Math.ceil(text.length / 2);
+    lines = [text.slice(0, mid), text.slice(mid)];
+  }
+  while (fs > minFontSize && (estimateTextWidth(lines[0], fs, ls) > maxWidth || estimateTextWidth(lines[1], fs, ls) > maxWidth)) {
+    fs -= 1;
+    ls = Math.max(0, ls - 0.15);
+  }
+  return { lines, fontSize: fs, letterSpacing: ls };
+}
+
+function renderLabelText(x, yCenter, text, opts) {
+  const fit = fitLabelText(text, opts.maxWidth, opts.fontSize, opts.letterSpacing, opts.minFontSize);
+  const fam = "'Helvetica Neue',Arial,sans-serif";
+  const fw = opts.fontWeight != null ? ` font-weight="${opts.fontWeight}"` : '';
+  if (fit.lines.length === 1) {
+    return `<text x="${x}" y="${yCenter}" text-anchor="middle" font-family="${fam}" font-size="${fit.fontSize}"${fw} letter-spacing="${fit.letterSpacing}" fill="${opts.fill}">${escapeLabelText(fit.lines[0])}</text>`;
+  }
+  const lh = fit.fontSize * 0.95;
+  const y1 = yCenter - lh / 2 + 1;
+  const y2 = yCenter + lh / 2 + 1;
+  return `<text x="${x}" y="${y1}" text-anchor="middle" font-family="${fam}" font-size="${fit.fontSize}"${fw} letter-spacing="${fit.letterSpacing}" fill="${opts.fill}">${escapeLabelText(fit.lines[0])}</text>` +
+         `<text x="${x}" y="${y2}" text-anchor="middle" font-family="${fam}" font-size="${fit.fontSize}"${fw} letter-spacing="${fit.letterSpacing}" fill="${opts.fill}">${escapeLabelText(fit.lines[1])}</text>`;
+}
 /* ============================================================
    SERUM — frasco cuadrado con hombros redondeados y gotero
    Inspirado en el estilo de la imagen de referencia:
    frasco corto, ancho, hombros curvos, tapa plateada + bulbo grande
    ============================================================ */
 <!-- SERUM MOCKUP -->
-<div class="product-mockup serum-mockup" style="--fill-color: #d8f4ff;">
-  <svg viewBox="0 0 260 420" xmlns="http://www.w3.org/2000/svg">
-    <ellipse cx="130" cy="390" rx="70" ry="12" fill="rgba(0,0,0,.12)"/>
+/* ============================================================
+   SERUM â frasco cuadrado con hombros redondeados y gotero
+   Inspirado en el estilo de la imagen de referencia:
+   frasco corto, ancho, hombros curvos, tapa plateada + bulbo grande
+   ============================================================ */
+function svgSerum(color, size, marca, nombreProducto) {
+  const c = FILL_COLORS[color] || FILL_COLORS['Incoloro'];
+  const marcaLabel = marca || 'TU MARCA';
+  nombreProducto = nombreProducto || 'SERUM';
+  const w = size, h = Math.round(size * 1.62);
 
-    <!-- Gotero -->
-    <rect x="111" y="35" width="38" height="88" rx="20" fill="#fff"/>
-    <rect x="100" y="115" width="60" height="52" rx="9" fill="#f7f9fb" stroke="#24465d" stroke-width="5"/>
-    <rect x="116" y="165" width="28" height="132" rx="12" fill="rgba(255,255,255,.35)" stroke="#24465d" stroke-width="3"/>
+  // Premium tapered-shoulder bottle silhouette — curved inward to the neck
+  const bodyPath = "M46,152 Q44,160 44,172 L44,252 Q44,264 56,266 L124,266 Q136,264 136,252 L136,172 Q136,160 134,152 Q126,138 90,136 Q54,138 46,152 Z";
 
-    <!-- Envase vidrio -->
-    <rect x="70" y="155" width="120" height="215" rx="35" fill="rgba(255,255,255,.22)" stroke="#24465d" stroke-width="6"/>
+  return `<svg width="${w}" height="${h}" viewBox="0 0 180 292" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <clipPath id="sr-fill-clip-${size}">
+    <path d="${bodyPath}"/>
+  </clipPath>
+  <clipPath id="sr-neck-clip-${size}">
+    <path d="M74,102 L106,102 L106,140 Q98,137 90,137 Q82,137 74,140 Z"/>
+  </clipPath>
+  <!-- Premium glass gradient — stronger edge contrast, clean centre -->
+  <linearGradient id="sr-glass-grad-${size}" x1="0%" y1="0%" x2="100%" y2="0%">
+    <stop offset="0%"   stop-color="#0d1820" stop-opacity=".30"/>
+    <stop offset="6%"   stop-color="#1e3040" stop-opacity=".14"/>
+    <stop offset="22%"  stop-color="#e4f2f8" stop-opacity=".05"/>
+    <stop offset="50%"  stop-color="#f2f9fc" stop-opacity=".02"/>
+    <stop offset="78%"  stop-color="#d4eaf4" stop-opacity=".06"/>
+    <stop offset="94%"  stop-color="#182838" stop-opacity=".13"/>
+    <stop offset="100%" stop-color="#0a1620" stop-opacity=".26"/>
+  </linearGradient>
+  <!-- Vertical sheen for subtle facets -->
+  <linearGradient id="sr-sheen-${size}" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%"   stop-color="rgba(255,255,255,.10)"/>
+    <stop offset="40%"  stop-color="rgba(255,255,255,.04)"/>
+    <stop offset="100%" stop-color="rgba(10,24,38,.08)"/>
+  </linearGradient>
+  <radialGradient id="sr-shadow-${size}" cx="50%" cy="50%" r="50%">
+    <stop offset="0%"  stop-color="rgba(7,23,47,.34)"/>
+    <stop offset="100%" stop-color="transparent"/>
+  </radialGradient>
+  <!-- Platinum collar — 7-stop metallic sheen -->
+  <linearGradient id="sr-cap-${size}" x1="0%" y1="0%" x2="100%" y2="0%">
+    <stop offset="0%"   stop-color="#4e5e68"/>
+    <stop offset="10%"  stop-color="#88a0ac"/>
+    <stop offset="26%"  stop-color="#d8e8f0"/>
+    <stop offset="44%"  stop-color="#f4f8fa"/>
+    <stop offset="60%"  stop-color="#e0ecf2"/>
+    <stop offset="78%"  stop-color="#96b0bc"/>
+    <stop offset="100%" stop-color="#485860"/>
+  </linearGradient>
+  <linearGradient id="sr-cap-v-${size}" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%"   stop-color="rgba(255,255,255,.22)"/>
+    <stop offset="55%"  stop-color="rgba(255,255,255,.02)"/>
+    <stop offset="100%" stop-color="rgba(0,20,35,.18)"/>
+  </linearGradient>
+  <!-- Satin rubber bulb with 3-D depth -->
+  <radialGradient id="sr-bulb-${size}" cx="30%" cy="24%" r="62%">
+    <stop offset="0%"   stop-color="#f2f6f8"/>
+    <stop offset="28%"  stop-color="#d4e2ea"/>
+    <stop offset="65%"  stop-color="#a8c0cc"/>
+    <stop offset="100%" stop-color="#78949e"/>
+  </radialGradient>
+  <radialGradient id="sr-bulb-rim-${size}" cx="50%" cy="50%" r="50%">
+    <stop offset="72%"  stop-color="rgba(100,135,150,.00)"/>
+    <stop offset="100%" stop-color="rgba(60,90,105,.28)"/>
+  </radialGradient>
+</defs>
 
-    <!-- Líquido editable -->
-    <path class="product-fill" d="M75 235 Q130 222 185 235 L185 335 Q185 365 155 365 L105 365 Q75 365 75 335 Z" fill="var(--fill-color)" opacity=".75"/>
+<!-- GROUND SHADOW -->
+<ellipse cx="90" cy="278" rx="56" ry="8" fill="url(#sr-shadow-${size})"/>
 
-    <!-- Línea de líquido -->
-    <path d="M75 235 Q130 222 185 235" fill="none" stroke="#24465d" stroke-width="3" opacity=".75"/>
+<!-- BASE RING -->
+<rect x="42" y="258" width="96" height="9" rx="4.5" fill="#a8c2ce" opacity=".42"/>
+<rect x="44" y="258" width="92" height="4" rx="2" fill="rgba(255,255,255,.18)"/>
 
-    <!-- Reflejos -->
-    <path d="M92 175 C82 215 82 300 92 350" stroke="white" stroke-width="8" opacity=".55" fill="none"/>
-    <path d="M170 175 C180 220 180 300 170 350" stroke="white" stroke-width="5" opacity=".35" fill="none"/>
+<!-- BOTTLE BODY back shell -->
+<path d="${bodyPath}"
+      fill="rgba(232,248,255,0.05)" stroke="#16263a" stroke-width="2.0" stroke-linejoin="round"/>
 
-    <!-- Burbujas -->
-    <circle cx="105" cy="270" r="4" fill="white" opacity=".75"/>
-    <circle cx="150" cy="285" r="3" fill="white" opacity=".7"/>
-    <circle cx="120" cy="320" r="3" fill="white" opacity=".65"/>
-    <circle cx="162" cy="330" r="4" fill="white" opacity=".55"/>
+<!-- FILL LAYER -->
+<g clip-path="url(#sr-fill-clip-${size})">
+  <rect x="44" y="136" width="92" height="132" fill="${c.base}"/>
+  <rect x="44" y="136" width="20" height="132" fill="${c.edge}" opacity=".62"/>
+  <rect x="116" y="136" width="20" height="132" fill="${c.edge}" opacity=".40"/>
+  <rect x="44" y="228" width="92" height="40" fill="${c.edge}" opacity=".20"/>
+  <path d="M44,158 Q58,150 90,152 Q122,150 136,158" fill="${c.surface}" opacity=".88"/>
+  <ellipse cx="74" cy="162" rx="16" ry="4" fill="${c.surface}" opacity=".50" transform="rotate(-5,74,162)"/>
+  <rect x="88.5" y="152" width="3" height="98" rx="1.5" fill="rgba(210,232,244,.28)"/>
+  <path d="M90,232 Q90,246 87,252 Q84,257 90,260 Q96,257 93,252 Q90,246 90,232 Z"
+        fill="${c.drop}" opacity=".92"/>
+  <circle cx="90" cy="260" r="3.2" fill="${c.drop}" opacity=".82"/>
+</g>
 
-    <!-- Etiqueta -->
-    <rect x="83" y="255" width="94" height="66" rx="3" fill="rgba(255,255,255,.9)" stroke="#24465d" stroke-width="2"/>
-    <text x="130" y="285" text-anchor="middle" font-size="24" font-weight="700" fill="#0c2338">SERUM</text>
-    <line x1="105" y1="297" x2="155" y2="297" stroke="#24465d" stroke-width="1"/>
-    <text x="130" y="315" text-anchor="middle" font-size="13" fill="#0c2338">laboratorio Genus</text>
+<!-- GLASS SHELL over fill -->
+<path d="${bodyPath}" fill="url(#sr-glass-grad-${size})"/>
+<path d="${bodyPath}" fill="url(#sr-sheen-${size})" opacity=".8"/>
+<line x1="56" y1="142" x2="56" y2="264" stroke="rgba(255,255,255,.16)" stroke-width="1.5"/>
+<line x1="124" y1="142" x2="124" y2="264" stroke="rgba(0,20,40,.07)" stroke-width="1.5"/>
+<path d="M45,196 Q90,194 135,196" stroke="rgba(210,232,245,.14)" stroke-width="1" fill="none"/>
 
-    <!-- Contorno inferior -->
-    <path d="M85 350 Q130 370 175 350" fill="none" stroke="#24465d" stroke-width="3" opacity=".55"/>
-  </svg>
-</div>
+<!-- NECK -->
+<g clip-path="url(#sr-neck-clip-${size})">
+  <rect x="74" y="102" width="32" height="38" fill="${c.base}" opacity=".26"/>
+  <rect x="74" y="102" width="32" height="38" fill="url(#sr-glass-grad-${size})"/>
+</g>
+<rect x="74" y="102" width="32" height="38" rx="3" fill="none" stroke="#16263a" stroke-width="1.6"/>
+<rect x="77" y="104" width="4" height="34" rx="2" fill="white" opacity=".16"/>
+
+<!-- SHOULDER CURVES -->
+<path d="M56,137 Q47,138 46,152" fill="none" stroke="rgba(22,40,56,.22)" stroke-width="2.5" stroke-linecap="round"/>
+<path d="M124,137 Q133,138 134,152" fill="none" stroke="rgba(22,40,56,.14)" stroke-width="2.5" stroke-linecap="round"/>
+<path d="M56,138 Q49,140 47,150" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="1.2" stroke-linecap="round"/>
+
+<!-- REFLECTIONS -->
+<rect x="50" y="150" width="7" height="106" rx="3.5" fill="white" opacity=".54"/>
+<rect x="60" y="156" width="2.5" height="80" rx="1.2" fill="white" opacity=".24"/>
+<ellipse cx="122" cy="154" rx="9" ry="3.5" fill="white" opacity=".30" transform="rotate(9,122,154)"/>
+<ellipse cx="54" cy="144" rx="7" ry="3.5" fill="white" opacity=".65" transform="rotate(-18,54,144)"/>
+<ellipse cx="90" cy="260" rx="34" ry="5" fill="rgba(200,232,248,.20)"/>
+
+<!-- LABEL -->
+<rect x="47" y="178" width="86" height="60" rx="4.5" fill="white" opacity=".93"/>
+<rect x="49" y="180" width="82" height="56" rx="3.5" fill="none" stroke="#d5d5d5" stroke-width=".6"/>
+<rect x="56" y="181" width="68" height="1.5" rx=".75" fill="rgba(175,148,98,.40)"/>
+${renderLabelText(90, 203, nombreProducto, {maxWidth:68, fontSize:15, letterSpacing:3.5, fontWeight:300, fill:'#1a1a2e', minFontSize:9})}
+<line x1="56" y1="210" x2="124" y2="210" stroke="#aaa" stroke-width=".75"/>
+${renderLabelText(90, 225, marcaLabel, {maxWidth:68, fontSize:14, letterSpacing:2, fill:'#666', minFontSize:8})}
+
+<!-- COLLAR / CAP ASSEMBLY -->
+<rect x="72" y="97" width="36" height="8" rx="4" fill="url(#sr-cap-${size})"/>
+<rect x="72" y="97" width="36" height="8" rx="4" fill="url(#sr-cap-v-${size})"/>
+<rect x="70" y="80" width="40" height="20" rx="7" fill="url(#sr-cap-${size})"/>
+<rect x="70" y="80" width="40" height="20" rx="7" fill="url(#sr-cap-v-${size})"/>
+<rect x="70" y="80" width="40" height="3"  rx="1.5" fill="rgba(255,255,255,.26)"/>
+<rect x="70" y="87" width="40" height="1"  rx=".5"  fill="rgba(255,255,255,.12)"/>
+<rect x="70" y="97" width="40" height="2"  rx="1"   fill="rgba(30,50,65,.26)"/>
+<rect x="72" y="82" width="6" height="14" rx="3" fill="white" opacity=".28"/>
+<path d="M72,89 Q90,87 108,89" stroke="rgba(0,22,38,.15)" stroke-width=".8" fill="none"/>
+
+<!-- DROPPER TUBE -->
+<rect x="88.8" y="46" width="2.4" height="36" rx="1.2" fill="rgba(170,198,214,.78)"/>
+<rect x="89.3" y="48" width="1.0" height="30" rx=".5" fill="white" opacity=".40"/>
+
+<!-- PREMIUM BULB — elongated elegant pipette -->
+<ellipse cx="90" cy="50" rx="9" ry="3.5" fill="rgba(130,162,178,.52)"/>
+<ellipse cx="90" cy="22" rx="14" ry="26" fill="url(#sr-bulb-${size})"/>
+<ellipse cx="90" cy="22" rx="14" ry="26" fill="url(#sr-bulb-rim-${size})"/>
+<ellipse cx="90" cy="22" rx="14" ry="26" fill="none" stroke="rgba(115,150,168,.38)" stroke-width="1.2"/>
+<ellipse cx="82" cy="11" rx="5" ry="9" fill="white" opacity=".60" transform="rotate(-14,82,11)"/>
+<ellipse cx="97" cy="8"  rx="2.4" ry="3.8" fill="white" opacity=".36" transform="rotate(10,97,8)"/>
+<ellipse cx="90" cy="45" rx="7" ry="2.5" fill="rgba(228,242,250,.44)"/>
+</svg>`;
+}
+
 /* ============================================================
    CREMA — pote cilíndrico de vidrio con crema visible encima
    ============================================================ */
